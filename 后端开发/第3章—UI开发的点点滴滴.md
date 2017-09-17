@@ -579,7 +579,7 @@ listView.setAdapter(adapter);
 
 上面的界面之所以简单，是因为我们在构建适配器的时候简单的使用了`android.R.layout.simple_list_item_1`。只能显示一段文本。所以如果定制的话
 
-**第一步就是自定义布局（fruit.xml）**：
+**第一步就是自定义布局（fruit_item.xml）**：
 
 ```xml
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -660,7 +660,6 @@ public class FruitAdapter extends ArrayAdapter {
 
     }
 }
-
 ```
 
 在这个自定义的适配器类中，主要是**重写了getView函数**(用于滚动屏幕的时候返回布局)：
@@ -787,17 +786,368 @@ RecycleView 是一个增强版的ListView。
     compile 'com.android.support:recyclerview-v7:26.0.0-alpha1'
 ```
 
+和ListView类似:
+
+**第一步是主活动的布局文件中加入RecycleView控件**：
+
+```xml
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </android.support.v7.widget.RecyclerView>
+```
+
+**第二步是新建自定义布局文件：**
+
+`fruit_item.xml`和上一节是完全一样的。
+
+
+**第三步是自定义Fruit数据类：**
+
+`fruit.java`和上一节是完全一样的。
+
+**第四步是自定义适配器：**
+
+不管是ListView还是RecyclerView，**都是将Adpter的数据传递到ListView/RecyclerView 中**。
+
+上一节的`FruitAdapter`继承`ArrayAdapter`，而这里继承`RecyclerView.Adapter`。
+
+在ListView中，我们通过自创的viewHolder来缓存布局内部的控件。在这里，已经有了一个抽象的ViewHolder，我们只需要继承这个这个即可。
+
+```java
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView fruitImage;
+        TextView fruitName;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            fruitImage = (ImageView) itemView.findViewById(R.id.fruit_image);
+            fruitName = (TextView) itemView.findViewById(R.id.fruit_name);
+        }
+    }
+```
+
+由于继承了RecyclerView.Adapter，必须实现内部抽象函数： 构造函数、`onCreateViewHolder()`、`onBindViewHolder()`、`getItemCount()`这四个函数。
+
+1.   **构造函数用于把展示的数据源传进来**，并复制给全局变量mFruitList变量：
+
+```java
+    public FruitAdapter(List<Fruit> fruitList){
+        mFruitList = fruitList;
+    }
+```
+
+2.   `onCreateViewHolder()`**用于创建ViewHolder实例**，我们把fruit_item布局加载进来，然后创建一个ViewHolder实例，最后将viewHolder返回。
+
+```java
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fruit_item,parent,false);
+        ViewHolder holder = new ViewHolder(view);
+        return holder;
+    }
+```
+
+
+
+3.   `onBindViewHolder()`用于**对RecyclerView子项的数据进行赋值**，会在每个子项滚动到屏幕内的时候执行。
+
+```java
+    @Override
+    public void onBindViewHolder(FruitAdapter.ViewHolder holder, int position) {
+        Fruit fruit = mFruitList.get(position);
+        holder.fruitImage.setImageResource(fruit.getImageId());
+        holder.fruitName.setText(fruit.getName());
+
+    }
+```
+
+4.   `getItemCount()`告诉RecyclerView一共有多少个子项，直接返回数据源的长度就可以了。
+
+
+
+**第五步就是在主活动中使用RecyclerView：**
+
+
+
+首先得获取到RecyclerView的实例
+
+然后创建LinearLayoutManager对象，并把它设置到RecyclerView中，LinearLayoutManager用于指定RecyclerView的布局方式。
+
+接下来创建FruitAdapter实例，最后调用RecyclerView的setAdapter()方法。
+
+
+
 
 
 ### 3.6.2 实现横向滚动和瀑布流布局
 
 
 
+**横向滚动：**
+
+```java
+layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+```
+
+
+
+**瀑布流布局：**
+
+
+
+```java
+StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
+recyclerView.setLayoutManager(layoutManager);
+```
+
+`StaggeredGridLayoutManager`构造函数接收两个参数，第一个桉树用于指定布局的列数，传入3表示会把布局分为3列；第二个参数用于指定布局的排列方向。
+
 ### 3.6.3 RecyclerView 的点击事件
 
 
 
+在`fruitAdapter`类的`onCreateViewHolder()`方法中，对相应的控件进行注册相应事件的监听器即可。
+
 
 
 ## 3.7 编写界面的最佳实践
+
+
+
+### 3.7.1 制作Nine-Patch 图片
+
+### 3.7.2 编写精美的聊天界面
+
+
+
+**在主活动的布局文件中引入RecyclerView 和 发送按钮：**
+
+
+
+```xml
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/msg_recycler_view"
+        android:layout_weight="1">
+    </android.support.v7.widget.RecyclerView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/input_text"
+            android:hint="Type something here"
+            android:maxLines="2" />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/send"
+            android:text="Send"/>
+    </LinearLayout>
+```
+
+
+
+**新建消息的实体类（Msg.java）：**
+
+
+
+```java
+public class Msg {
+    public static final int TYPE_RECEIVED = 0;
+
+    public static final int TYPE_SENT = 1;
+
+    private String content;
+
+    private int type;
+
+    public Msg(String content, int type){
+        this.content = content;
+        this.type = type;
+    }
+
+    public String getContent(){
+        return content;
+    }
+
+    public int getType(){
+        return type;
+    }
+}
+```
+
+
+
+**新建RecyclerView子项布局文件（msg_item.xml）:**
+
+左边消息和右边消息的控件：
+
+```xml
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:id="@+id/left_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:background="@drawable/message_left"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/lef_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="10dp"
+            android:textColor="#fff" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/right_layout"
+        android:layout_gravity="right"
+        android:background="@drawable/message_right"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/right_msg"
+            android:layout_gravity="center"
+            android:layout_margin="10dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>
+```
+
+**是新建RecyclerView的适配器（MsgAdapter.java）:**
+
+主要是`onCreateViewHolder()`和`onBindViewHoloder()`这两个函数：
+
+```java
+public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
+
+    private List<Msg> mMsgList;
+
+    public MsgAdapter(List<Msg> msgList){
+        mMsgList = msgList;
+    }
+
+    @Override
+    public MsgAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.msg_item,parent,false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(MsgAdapter.ViewHolder holder, int position) {
+        Msg msg = mMsgList.get(position);
+        if (msg.getType() == Msg.TYPE_RECEIVED){
+            holder.leftLayout.setVisibility(View.VISIBLE);
+            holder.rightLayout.setVisibility(View.GONE);
+            holder.leftMsg.setText(msg.getContent());
+        }else {
+            holder.rightLayout.setVisibility(View.VISIBLE);
+            holder.leftLayout.setVisibility(View.GONE);
+            holder.rightMsg.setText(msg.getContent());
+        }
+
+    }
+
+    @Override
+    public int getItemCount() {
+        return mMsgList.size();
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder{
+
+        LinearLayout leftLayout;
+        LinearLayout rightLayout;
+
+        TextView leftMsg;
+        TextView rightMsg;
+
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            leftLayout = (LinearLayout) itemView.findViewById(R.id.left_layout);
+            rightLayout = (LinearLayout)itemView.findViewById(R.id.right_layout);
+            leftMsg = (TextView)itemView.findViewById(R.id.lef_msg);
+            rightMsg = (TextView)itemView.findViewById(R.id.right_msg);
+        }
+    }
+
+
+}
+```
+
+
+
+**最后就是在主活动中向RecyclerView控件中传递数据：**
+
+
+
+```java
+public class MainActivity extends AppCompatActivity {
+
+    private List<Msg> msgList = new ArrayList<>();
+    private EditText inputText;
+    private Button send;
+    private RecyclerView msgRecyclerView;
+    private MsgAdapter adapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        initMsgs();
+        inputText = (EditText)findViewById(R.id.input_text);
+        send = (Button)findViewById(R.id.send);
+        msgRecyclerView = (RecyclerView)findViewById(R.id.msg_recycler_view);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        msgRecyclerView.setLayoutManager(layoutManager);
+        adapter = new MsgAdapter(msgList);
+        msgRecyclerView.setAdapter(adapter);
+
+        send.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String content = inputText.getText().toString();
+                if (!"".equals(content)){
+                    Msg msg = new Msg(content,Msg.TYPE_SENT);
+                    msgList.add(msg);
+                    adapter.notifyItemInserted(msgList.size()-1);
+                    msgRecyclerView.scrollToPosition(msgList.size()-1);
+                    inputText.setText("");
+                }
+            }
+        });
+
+    }
+
+    private void initMsgs(){
+        Msg msg1 = new Msg("Hello guy.",Msg.TYPE_RECEIVED);
+        msgList.add(msg1);
+        Msg msg2 = new Msg("Hello,Who is that?",Msg.TYPE_SENT);
+        msgList.add(msg2);
+        Msg msg3 = new Msg("This is Tom.Nice to talking to you.",Msg.TYPE_RECEIVED);
+        msgList.add(msg3);
+    }
+}
+```
 
