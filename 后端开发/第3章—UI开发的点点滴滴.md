@@ -867,9 +867,9 @@ RecycleView 是一个增强版的ListView。
 
 
 
+
+
 **第五步就是在主活动中使用RecyclerView：**
-
-
 
 首先得获取到RecyclerView的实例
 
